@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6c47fd;
+      --primary-dark: #4338ca;
+      --text-light: #222;
+      --text-dark: #f1f1f1;
+      --user-bg: #dbf4ff;
+      --assistant-bg: #fffacc;
+      --error: #ef4444;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(rgba(30, 0, 80, 0.3), rgba(10, 12, 34, 0.4)),
+        url("/static/ivan-bandura-EWVXMoIWlpA-unsplash.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text-light);
+      display: flex;
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+    }
+
+    body.dark {
+      background: linear-gradient(rgba(21, 18, 36, 0.95), rgba(0, 0, 0, 0.85)),
+        url("/static/ivan-bandura-EWVXMoIWlpA-unsplash.jpg") no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text-dark);
+    }
+
+    #sidebar {
+      width: 260px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(15px);
+      padding: 1.5rem 1rem;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      position: fixed;
+      top: 80px;
+      left: 20px;
+      display: none;
+      z-index: 1000;
+    }
+
+    body.dark #sidebar {
+      background: rgba(31, 41, 55, 0.88);
+    }
+
+    #sidebar h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .history-item {
+      font-size: 0.95rem;
+      background: #f0f0f0;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    .history-item:hover {
+      background: #dcdcdc;
+    }
+
+    body.dark .history-item {
+      background: #3b3b3b;
+      color: #fff;
+    }
+
+    body.dark .history-item:hover {
+      background: #505050;
+      color: white;
+    }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-left: auto;
+      padding-left: 300px;
+      width: 100%;
+    }
+
+    header {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1rem 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: inherit;
+      margin: 0;
+    }
+
+    #toggleTheme,
+    #toggleSidebar {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    #toggleTheme:hover,
+    #toggleSidebar:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    #chatbox {
+      max-width: 800px;
+      margin: 1rem auto;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      min-height: 300px;
+    }
+
+    body.dark #chatbox {
+      background: rgba(31, 41, 55, 0.85);
+    }
+
+    .msg {
+      margin-bottom: 1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      word-wrap: break-word;
+    }
+
+    .user {
+      background: var(--user-bg);
+      color: #1a1a1a;
+    }
+
+    .assistant {
+      background: var(--assistant-bg);
+      color: #222;
+    }
+
+    body.dark .user {
+      background: #22376c;
+      color: #e3f0ff;
+    }
+
+    body.dark .assistant {
+      background: #463865;
+      color: #ffe9a7;
+    }
+
+    .error {
+      color: var(--error);
+      font-weight: bold;
+    }
+
+    #micBtn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      width: 64px;
+      height: 64px;
+      color: white;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+
+    #micBtn:hover {
+      background: var(--primary-dark);
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        top: 70px;
+        left: 10px;
+        width: 90%;
+      }
+
+      #main {
+        padding-left: 0;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <h2>🕘 History</h2>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <header>
+      <button id="toggleSidebar">📂 History</button>
+      <h1>🎙️ Voice Assistant</h1>
+      <button id="toggleTheme">🌙 Dark Mode</button>
+    </header>
+
+    <main id="chatbox"></main>
+  </div>
+
+  <!-- Mic Button -->
+  <button id="micBtn">🎤</button>
+
+  <script>
+    const toggleTheme = document.getElementById("toggleTheme");
+    const toggleSidebar = document.getElementById("toggleSidebar");
+    const sidebar = document.getElementById("sidebar");
+    const chatbox = document.getElementById("chatbox");
+    const micBtn = document.getElementById("micBtn");
+    const historyList = document.getElementById("historyList");
+
+    // Toggle light/dark mode
+    toggleTheme.onclick = () => {
+      document.body.classList.toggle("dark");
+      toggleTheme.textContent = document.body.classList.contains("dark") ? "☀️ Light Mode" : "🌙 Dark Mode";
+    };
+
+    // Toggle visibility of sidebar
+    toggleSidebar.onclick = () => {
+      sidebar.style.display = (sidebar.style.display === "block") ? "none" : "block";
+    };
+
+    // Speak the assistant's response
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utter);
+    }
+
+    // Add a command to history
+    function addHistoryItem(command) {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      div.textContent = command;
+      div.onclick = () => {
+        chatbox.innerHTML += `<div class="msg user">You: ${command}</div>`;
+        fetch("/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command })
+        })
+        .then(res => res.json())
+        .then(data => {
+          chatbox.innerHTML += `<div class="msg assistant">Assistant: ${data.output}</div>`;
+          speak(data.output);
+        });
+      };
+      historyList.prepend(div);
+
+      // Save to localStorage
+      let history = JSON.parse(localStorage.getItem("history")) || [];
+      history.unshift(command);
+      localStorage.setItem("history", JSON.stringify(history.slice(0, 25))); // keep last 25 commands
+    }
+
+    // Initialize saved history
+    window.addEventListener('DOMContentLoaded', () => {
+      let savedHistory = JSON.parse(localStorage.getItem("history")) || [];
+      savedHistory.reverse().forEach(cmd => addHistoryItem(cmd));
+    });
+
+    // Speech recognition
+    micBtn.onclick = () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onresult = function (event) {
+        const command = event.results[0][0].transcript;
+        chatbox.innerHTML += `<div class="msg user">You: ${command}</div>`;
+        addHistoryItem(command);
+        fetch("/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command })
+        })
+        .then(res => res.json())
+        .then(data => {
+          chatbox.innerHTML += `<div class="msg assistant">Assistant: ${data.output}</div>`;
+          speak(data.output);
+        })
+        .catch(err => {
+          chatbox.innerHTML += `<div class="msg error">❌ Error: ${err.message}</div>`;
+        });
+      };
+
+      recognition.onerror = function (event) {
+        chatbox.innerHTML += `<div class="msg error">❌ Recognition error: ${event.error}</div>`;
+      };
+    };
+  </script>
+</body>
+</html>
