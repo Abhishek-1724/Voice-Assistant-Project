@@ -26,5 +26,5 @@ A browser-based voice assistant built using Python (Flask) and JavaScript. This 
 | APIs        | OpenWeatherMap, SERP API, Wikipedia, Groq API |
 | Voice       | Web Speech API and pyttsx3         |
 
-## Folder Structure
+
 
